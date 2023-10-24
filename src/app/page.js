@@ -24,13 +24,14 @@ export default function Home() {
   const [fourthVerifierResult, setFourthVerifierResult] = useState(undefined);
   const [puzzleCode, setPuzzleCode] = useState('');
   const [puzzleInfo, setPuzzleInfo] = useState({});
+  const [loading, setLoading] = useState(false);
 
 
 
   const handleApi = () => {
     event.preventDefault();
-
-    fetch(`https://turingmachine.info/api/api.php?h=${puzzleCode}`)
+    setLoading(true);
+    fetch(`https://turingmachine.info/api/api.php?h=${puzzleCode.replace('#', '')}`)
       .then((response) => response.json())
       .then((data) => {
         setPuzzleInfo({
@@ -42,8 +43,8 @@ export default function Home() {
           verifiers: data.ind,
           code: data.hash
         }
-        ), console.log(data);
-      });
+        )
+      }).then(() => setLoading(false));
   }
 
   const handleTriangleValue = (e) => {
@@ -126,8 +127,9 @@ export default function Home() {
               <input type="text" className='input input-bordered' value={puzzleCode} onChange={e => setPuzzleCode(e.target.value)} />
             </div>
             <button className='btn btn-accent mt-10' type='submit'>
-              Iniciar
+              {loading ? <span className="loading loading-dots loading-lg" /> : 'Iniciar'}
             </button>
+
           </form>
         </div>
       )}
@@ -250,7 +252,7 @@ export default function Home() {
                         onClick={
                           handletestCodes
                         }>
-                        Select
+                        Selecione
                       </button>
                     </form>
                   </div>
