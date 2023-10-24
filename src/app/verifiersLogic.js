@@ -180,6 +180,8 @@ export const v15 = (testNumbers, solution) => {
     return true
   } else if (testNumbers.circle > testNumbers.triangle && testNumbers.circle > testNumbers.square && solution.circle > solution.triangle && solution.circle > solution.square) {
     return true
+  } else {
+    false
   }
 }
 

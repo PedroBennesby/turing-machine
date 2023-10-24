@@ -18,39 +18,33 @@ export default function Home() {
   const [squareValue, setSquareValue] = useState('');
   const [circleValue, setCircleValue] = useState('');
   const [testNumbers, setTestNumbers] = useState('');
-  const [solution, setSolution] = useState({});
-  const [firstVerifierResult, setFirstVerifierResult] = useState('');
-  const [secondVerifierResult, setSecondVerifierResult] = useState('');
-  const [thirdVerifierResult, setThirdVerifierResult] = useState('');
+  const [firstVerifierResult, setFirstVerifierResult] = useState(undefined);
+  const [secondVerifierResult, setSecondVerifierResult] = useState(undefined);
+  const [thirdVerifierResult, setThirdVerifierResult] = useState(undefined);
   const [fourthVerifierResult, setFourthVerifierResult] = useState(undefined);
+  const [puzzleCode, setPuzzleCode] = useState('');
+  const [puzzleInfo, setPuzzleInfo] = useState({});
 
-  useEffect(() => {
-    let firstDigit = Math.floor(Math.random() * (5 - 1 + 1) + 1);
-    let secondDigit = Math.floor(Math.random() * (5 - 1 + 1) + 1);;
-    let thirdDigit = Math.floor(Math.random() * (5 - 1 + 1) + 1);;
 
-    // console.log(firstDigit, secondDigit, thirdDigit)
-    setSolution({
-      triangle: firstDigit,
-      square: secondDigit,
-      circle: thirdDigit,
-    })
-  }, []);
 
-  const addVerifier = () => {
+  const handleApi = () => {
     event.preventDefault();
 
-    if (firstVerifier !== '' || secondVerifier !== '' || thirdVerifier !== '' || fourthVerifier !== '') {
-      setVerifiers({
-        firstVerifier: firstVerifier,
-        secondVerifier: secondVerifier,
-        thirdVerifier: thirdVerifier,
-        fourthVerifier: fourthVerifier,
+    fetch(`https://turingmachine.info/api/api.php?h=${puzzleCode}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setPuzzleInfo({
+          solution: {
+            triangle: data.code.toString().split('')[0],
+            square: data.code.toString().split('')[1],
+            circle: data.code.toString().split('')[2],
+          },
+          verifiers: data.ind,
+          code: data.hash
+        }
+        ), console.log(data);
       });
-    } else {
-      setVerifiersError('Please enter all four verifiers');
-    }
-  };
+  }
 
   const handleTriangleValue = (e) => {
     setTriangleValue(e.target.value);
@@ -77,61 +71,75 @@ export default function Home() {
   };
 
   const handleFirstVerifierTest = () => {
-    functionList[verifiers.firstVerifier - 1](testNumbers, solution) ? setFirstVerifierResult(true) : setFirstVerifierResult(false);
+    functionList[puzzleInfo.verifiers[0] - 1](testNumbers, puzzleInfo.solution) ? setFirstVerifierResult(true) : setFirstVerifierResult(false);
   }
 
   const handleSecondVerifierTest = () => {
-    functionList[verifiers.secondVerifier - 1](testNumbers, solution) ? setSecondVerifierResult(true) : setSecondVerifierResult(false);
+    functionList[puzzleInfo.verifiers[1] - 1](testNumbers, puzzleInfo.solution) ? setSecondVerifierResult(true) : setSecondVerifierResult(false);
   }
 
   const handleThirdVerifierTest = () => {
-    functionList[verifiers.thirdVerifier - 1](testNumbers, solution) ? setThirdVerifierResult(true) : setThirdVerifierResult(false);
+    functionList[puzzleInfo.verifiers[2] - 1](testNumbers, puzzleInfo.solution) ? setThirdVerifierResult(true) : setThirdVerifierResult(false);
   }
 
   const handleFourthVerifierTest = () => {
-    functionList[verifiers.fourthVerifier - 1](testNumbers, solution) ? setFourthVerifierResult(true) : setFourthVerifierResult(false);
+    functionList[puzzleInfo.verifiers[3] - 1](testNumbers, puzzleInfo.solution) ? setFourthVerifierResult(true) : setFourthVerifierResult(false);
   }
 
   const handleResult = () => {
-    if (triangleResult == solution.triangle && squareResult == solution.square && circleResult == solution.circle) {
+    if (triangleResult == puzzleInfo.solution.triangle && squareResult == puzzleInfo.solution.square && circleResult == puzzleInfo.solution.circle) {
       setResult(true);
     } else {
       setResult(false);
     }
   };
 
+  const handletestCodes = () => {
+    setTestNumbers({
+      triangle: triangleValue,
+      square: squareValue,
+      circle: circleValue,
+    })
+
+    setFirstVerifierResult(undefined);
+    setSecondVerifierResult(undefined);
+    setThirdVerifierResult(undefined);
+    setFourthVerifierResult(undefined);
+  }
 
 
-  // console.log(solution, result, fourthVerifierResult);
+
+  console.log(puzzleInfo.solution, result, puzzleInfo);
 
   return (
     <main className='flex min-h-screen flex-col justify-center items-center p-24'>
-      {Object.values(verifiers).length === 0 && (
+      {Object.values(puzzleInfo).length === 0 && (
         <div>
-          <h1 className='text-4xl font-bold text-center'>Choose your verifiers</h1>
+          <h1 className='text-4xl font-bold text-center'>Insira seu código (#)</h1>
           <p className='text-red-500 text-center'>{verifiersError}</p>
-          <form className='flex w-full items-center justify-center flex-col mt-20' onSubmit={addVerifier}>
+          <form className='flex w-full items-center justify-center flex-col mt-10' onSubmit={handleApi}>
             <div className='flex gap-4'>
-              <input type='number' placeholder='Verifier 1' value={firstVerifier} className=' input input-bordered' onChange={(e) => setFirstVerifier(e.target.value <= 25 ? e.target.value : 25)} />
+              {/* <input type='number' placeholder='Verifier 1' value={firstVerifier} className=' input input-bordered' onChange={(e) => setFirstVerifier(e.target.value <= 25 ? e.target.value : 25)} />
               <input type='number' placeholder='Verifier 2' value={secondVerifier} className=' input input-bordered' onChange={(e) => setSecondVerifier(e.target.value <= 25 ? e.target.value : 25)} />
               <input type='number' placeholder='Verifier 3' value={thirdVerifier} className=' input input-bordered' onChange={(e) => setThirdVerifier(e.target.value <= 25 ? e.target.value : 25)} />
-              <input type='number' placeholder='Verifier 4' value={fourthVerifier} className=' input input-bordered' onChange={(e) => setFourthVerifier(e.target.value <= 25 ? e.target.value : 25)} />
+              <input type='number' placeholder='Verifier 4' value={fourthVerifier} className=' input input-bordered' onChange={(e) => setFourthVerifier(e.target.value <= 25 ? e.target.value : 25)} /> */}
+              <input type="text" className='input input-bordered' value={puzzleCode} onChange={e => setPuzzleCode(e.target.value)} />
             </div>
-            <button className='btn btn-success mt-10' type='submit'>
-              Submit
+            <button className='btn btn-accent mt-10' type='submit'>
+              Iniciar
             </button>
           </form>
         </div>
       )}
 
       <div>
-        {Object.values(verifiers).length !== 0 && (
+        {Object.values(puzzleInfo).length !== 0 && (
           <div className='flex flex-col'>
-            <h1 className='text-4xl font-bold text-center'>Verifiers </h1>
+            <h1 className='text-4xl font-bold text-center'>Verificadores #{puzzleInfo.code} </h1>
 
             {Object.keys(testNumbers).length > 0 && (
               <div className='flex flex-col mt-6 items-center gap-4'>
-                <h3 className='text-xl font-semibold'>Numbers being tested</h3>
+                <h3 className='text-xl font-semibold'>Números sendo testados</h3>
                 <div className='flex gap-4'>
                   <div>
                     <img src='https://turingmachine.info/static/media/ico_bluetriangle.46d683ce64d22d400a27.svg' alt='' className='mb-4 w-5' />
@@ -153,62 +161,62 @@ export default function Home() {
 
             <div className='flex flex-wrap gap-4 mt-5 justify-center w-full'>
               <div className='card card-compact w-96 bg-slate-800 shadow-xl'>
-                <img src={`https://turingmachine.info/images/criteriacards/EN/TM_GameCards_EN-${verifiers.firstVerifier < 10 ? '0' + verifiers.firstVerifier : verifiers.firstVerifier}.png`} alt='verifier card' />
+                <img src={`https://turingmachine.info/images/criteriacards/BR/TM_GameCards_BR-${puzzleInfo.verifiers[0] < 10 ? '0' + puzzleInfo.verifiers[0] : puzzleInfo.verifiers[0]}.png`} alt='verifier card' />
                 <div className='card-body'>
-                  <h2 className='card-title'>First verifier</h2>
-                  {firstVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>True</p> : firstVerifierResult === false ? <p className='font-bold text-red-500 text-xl'>False </p> : null}
+                  <h2 className='card-title'>A</h2>
+                  {firstVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>Verdadeiro</p> : firstVerifierResult === false ? <p className='font-bold text-red-500 text-xl'> Falso </p> : null}
                   <div className='card-actions justify-center'>
-                    <button className='btn btn-primary' onClick={handleFirstVerifierTest}>Test this verifier</button>
+                    <button className='btn btn-primary' onClick={handleFirstVerifierTest}>Teste esse verificador</button>
                   </div>
                 </div>
               </div>
 
               <div className='card card-compact w-96 bg-slate-800 shadow-xl'>
-                <img src={`https://turingmachine.info/images/criteriacards/EN/TM_GameCards_EN-${verifiers.secondVerifier < 10 ? '0' + verifiers.secondVerifier : verifiers.secondVerifier}.png`} alt='verifier card' />
+                <img src={`https://turingmachine.info/images/criteriacards/BR/TM_GameCards_BR-${puzzleInfo.verifiers[1] < 10 ? '0' + puzzleInfo.verifiers[1] : puzzleInfo.verifiers[1]}.png`} alt='verifier card' />
                 <div className='card-body'>
-                  <h2 className='card-title'>Second verifier</h2>
-                  {secondVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>True</p> : secondVerifierResult === false ? <p className='font-bold text-red-500 text-xl'>False </p> : null}
+                  <h2 className='card-title'>B</h2>
+                  {secondVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>Verdadeiro</p> : secondVerifierResult === false ? <p className='font-bold text-red-500 text-xl'> Falso </p> : null}
                   <div className='card-actions justify-center'>
-                    <button className='btn btn-primary' onClick={handleSecondVerifierTest}>Test this verifier</button>
+                    <button className='btn btn-primary' onClick={handleSecondVerifierTest}>Teste esse verificador</button>
                   </div>
                 </div>
               </div>
 
               <div className='card card-compact w-96 bg-slate-800 shadow-xl'>
-                <img src={`https://turingmachine.info/images/criteriacards/EN/TM_GameCards_EN-${verifiers.thirdVerifier < 10 ? '0' + verifiers.thirdVerifier : verifiers.thirdVerifier}.png`} alt='verifier card' />
+                <img src={`https://turingmachine.info/images/criteriacards/BR/TM_GameCards_BR-${puzzleInfo.verifiers[2] < 10 ? '0' + puzzleInfo.verifiers[2] : puzzleInfo.verifiers[2]}.png`} alt='verifier card' />
                 <div className='card-body'>
-                  <h2 className='card-title'>Third verifier</h2>
-                  {thirdVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>True</p> : thirdVerifierResult === false ? <p className='font-bold text-red-500 text-xl'>False </p> : null}
+                  <h2 className='card-title'>C</h2>
+                  {thirdVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>Verdadeiro</p> : thirdVerifierResult === false ? <p className='font-bold text-red-500 text-xl'> Falso </p> : null}
                   <div className='card-actions justify-center'>
-                    <button className='btn btn-primary' onClick={handleThirdVerifierTest}>Test this verifier</button>
+                    <button className='btn btn-primary' onClick={handleThirdVerifierTest}>Teste esse verificador</button>
                   </div>
                 </div>
               </div>
 
               <div className='card card-compact w-96 bg-slate-800 shadow-xl'>
-                <img src={`https://turingmachine.info/images/criteriacards/EN/TM_GameCards_EN-${verifiers.fourthVerifier < 10 ? '0' + verifiers.fourthVerifier : verifiers.fourthVerifier}.png`} alt='verifier card' />
+                <img src={`https://turingmachine.info/images/criteriacards/BR/TM_GameCards_BR-${puzzleInfo.verifiers[3] < 10 ? '0' + puzzleInfo.verifiers[3] : puzzleInfo.verifiers[3]}.png`} alt='verifier card' />
                 <div className='card-body'>
-                  <h2 className='card-title'>Fourth verifier</h2>
-                  {fourthVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>True</p> : fourthVerifierResult === false ? <p className='font-bold text-red-500 text-xl'>False </p> : null}
+                  <h2 className='card-title'>D</h2>
+                  {fourthVerifierResult === true ? <p className='font-bold text-green-500 text-xl'>Verdadeiro</p> : fourthVerifierResult === false ? <p className='font-bold text-red-500 text-xl'>Falso </p> : null}
                   <div className='card-actions justify-center'>
-                    <button className='btn btn-primary' onClick={handleFourthVerifierTest}>Test this verifier</button>
+                    <button className='btn btn-primary' onClick={handleFourthVerifierTest}>Teste esse verificador</button>
                   </div>
                 </div>
               </div>
             </div>
             {<div className='flex justify-center mt-10 text-2xl font-bold'>
               {
-                result === true ? <h1 className='text-green-500'>Congratulations, you got the code right!</h1> : result === false ? <h1 className='text-red-500'>Sorry, you got the code wrong!</h1> : null
+                result === true ? <h1 className='text-green-500'>Parabéns, você acertou o código!</h1> : result === false ? <h1 className='text-red-500'>Desculpe, esse não é o código certo!</h1> : null
               }
             </div>
             }
             <div className='flex gap-4 justify-center mt-10 '>
-              <button className=' btn btn-neutral w-1/3' onClick={() => document.getElementById('test_numbers').showModal()}>
-                Add test numbers
+              <button className=' btn btn-neutral w-1/4' onClick={() => document.getElementById('test_numbers').showModal()}>
+                Adicionar números para teste
               </button>
               <dialog id='test_numbers' className='modal'>
                 <div className='modal-box'>
-                  <h3 className='font-bold text-lg text-center'>Select your test numbers!</h3>
+                  <h3 className='font-bold text-lg text-center'>Selecione os números para teste</h3>
                   <div className='modal-action'>
                     <form method='dialog' className='flex flex-col justify-center w-full'>
                       <div className='flex gap-8 justify-center items-end'>
@@ -239,12 +247,8 @@ export default function Home() {
                       </div>
                       <button
                         className='btn btn-accent mt-4'
-                        onClick={() =>
-                          setTestNumbers({
-                            triangle: triangleValue,
-                            square: squareValue,
-                            circle: circleValue,
-                          })
+                        onClick={
+                          handletestCodes
                         }>
                         Select
                       </button>
@@ -252,12 +256,12 @@ export default function Home() {
                   </div>
                 </div>
               </dialog>
-              <button className='btn-accent btn w-1/3' onClick={() => document.getElementById('test_code').showModal()}>
-                Test a code
+              <button className='btn-accent btn w-1/4' onClick={() => document.getElementById('test_code').showModal()}>
+                Testar uma solução
               </button>
               <dialog id='test_code' className='modal'>
                 <div className='modal-box'>
-                  <h3 className='font-bold text-lg text-center'>Select your solution!</h3>
+                  <h3 className='font-bold text-lg text-center'>Selecione sua solução!</h3>
                   <div className='modal-action'>
                     <form method='dialog' className='flex flex-col justify-center w-full'>
                       <div className='flex gap-8 justify-center items-end'>
@@ -288,7 +292,44 @@ export default function Home() {
                       </div>
 
                       <button className='btn btn-accent mt-4' onClick={handleResult}>
-                        Test
+                        Testar
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </dialog>
+
+              <button className='btn-warning btn w-1/4' onClick={() => document.getElementById('solution').showModal()}>
+                Solução
+              </button>
+              <dialog id='solution' className='modal'>
+                <div className='modal-box'>
+                  <div className='modal-action'>
+                    <form method='dialog' className='flex flex-col justify-center w-full'>
+                      <div className='flex gap-8 justify-center items-end'>
+                        <div className='flex flex-col mt-6 items-center gap-4'>
+                          <h3 className='text-xl font-semibold'>Solução</h3>
+                          <div className='flex gap-4'>
+                            <div className='flex flex-col justify-center items-center'>
+                              <img src='https://turingmachine.info/static/media/ico_bluetriangle.46d683ce64d22d400a27.svg' alt='' className='mb-4 w-5' />
+                              <p>{puzzleInfo.solution.triangle}</p>
+                            </div>
+
+                            <div className='flex flex-col justify-center items-center'>
+                              <img src='https://turingmachine.info/static/media/ico_yellowsquare.f4b8c974306c5dd27378.svg' alt='' className='mb-4 w-[18px]' />
+                              <p>{puzzleInfo.solution.square}</p>
+                            </div>
+
+                            <div className='flex flex-col justify-center items-center'>
+                              <img src='https://turingmachine.info/static/media/ico_purplecircle.0eb3434d30e2005802ee.svg' alt='' className='mb-4 w-5' />
+                              <p>{puzzleInfo.solution.circle}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button className='btn btn-accent mt-14'>
+                        Fechar
                       </button>
                     </form>
                   </div>
